@@ -1,0 +1,53 @@
+# Render Blueprint for the API. Because this is a monorepo, `rootDir` is what
+# scopes the service to `backend/` — without it Render builds from the repo root
+# and cannot find the Dockerfile or requirements.
+#
+# The database is NOT declared here: Render's own free Postgres expires, so the
+# recommended setup uses Neon and `DATABASE_URL` is supplied by hand.
+#
+# Apply with:  Render dashboard -> New -> Blueprint -> pick this repo.
+
+services:
+  - type: web
+    name: productivity-tracker-api
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+
+    # Only rebuild when the backend actually changes, so a CSS tweak on the
+    # frontend does not burn free build minutes and restart the API.
+    buildFilter:
+      paths:
+        - backend/**
+
+    envVars:
+      # MUST be 0. At 1 the API treats every unauthenticated request as the
+      # local account, which would make the deployment world-readable.
+      - key: AUTH_DEV_BYPASS
+        value: "0"
+
+      # Render generates a strong random value and keeps it across deploys.
+      - key: SESSION_SECRET
+        generateValue: true
+
+      - key: SESSION_COOKIE_SECURE
+        value: "1"
+
+      - key: SQL_ECHO
+        value: "0"
+
+      # Set these in the dashboard; `sync: false` stops Render prompting to
+      # overwrite them on every blueprint re-apply.
+      #   DATABASE_URL   -> Neon, with the scheme rewritten to postgresql+psycopg://
+      #   GOOGLE_CLIENT_ID -> the OAuth client id
+      #   CORS_ORIGINS   -> https://<your-app>.vercel.app
+      - key: DATABASE_URL
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false

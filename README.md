@@ -306,6 +306,112 @@ npm --prefix frontend run build
 Emits a static bundle to `frontend/dist`. The backend needs no build step; run
 it under Uvicorn (or Gunicorn with Uvicorn workers) in production.
 
+## Deployment (free tier)
+
+Three services, all on free plans:
+
+| Layer | Host | Monorepo setting |
+| --- | --- | --- |
+| Frontend | Vercel | Root Directory = `frontend` |
+| Backend | Render (Docker) | Root Directory = `backend` (see `render.yaml`) |
+| Database | Neon Postgres | n/a |
+
+### Why the frontend proxies the API
+
+`frontend/vercel.json` rewrites `/api/*` to the Render URL with a **transparent
+proxy**, so the browser only ever sees the Vercel domain.
+
+This is not a nicety. The session cookie is `SameSite=Lax`, and a browser will
+not send a `Lax` cookie on a *cross-site* request. Point the frontend straight
+at `*.onrender.com` and sign-in appears to succeed, sets a cookie, and then
+every subsequent call returns `401` — with nothing obviously wrong in either
+log. The proxy makes the request same-origin, so `Lax` behaves, CORS stops
+mattering, and `VITE_API_BASE_URL` stays at its `/api` default.
+
+The alternative is separate domains with `SameSite=None; Secure`. That needs a
+code change: `samesite` is currently hardcoded in `app/routers/auth.py`.
+
+### 1. Database — Neon
+
+1. Create a project at [neon.tech](https://neon.tech) and copy the connection
+   string.
+2. **Rewrite the scheme** from `postgresql://` to `postgresql+psycopg://` —
+   SQLAlchemy needs it to select psycopg 3, which is what `requirements.txt`
+   pins. Keep `?sslmode=require`.
+3. Prefer the **direct** endpoint over the `-pooler` one. The API is a single
+   long-lived process with SQLAlchemy's own connection pool, so PgBouncer adds
+   nothing and its transaction pooling interferes with psycopg's prepared
+   statements. Neon suspends idle compute, but `build_engine` already sets
+   `pool_pre_ping=True`, which discards dead connections on checkout.
+
+No schema step: the app runs `Base.metadata.create_all` on startup and builds
+all four tables on first boot. No seed step either — default categories are
+created per account at first sign-in.
+
+### 2. Backend — Render
+
+Either apply the blueprint (**New → Blueprint**, pick this repo, which reads
+`render.yaml`), or create a web service by hand with:
+
+- Root Directory `backend`, Runtime **Docker**, Dockerfile Path `./Dockerfile`
+- Health check path `/health`
+- Build filter `backend/**`, so frontend commits do not rebuild the API
+
+Environment variables:
+
+| Variable | Value |
+| --- | --- |
+| `AUTH_DEV_BYPASS` | `0` — **not optional** (see below) |
+| `SESSION_SECRET` | a long random value |
+| `SESSION_COOKIE_SECURE` | `1` |
+| `DATABASE_URL` | the Neon string from step 1 |
+| `GOOGLE_CLIENT_ID` | your OAuth client id |
+| `CORS_ORIGINS` | `https://<your-app>.vercel.app` |
+
+> **`AUTH_DEV_BYPASS` must be `0` in any deployment.** At `1` the API treats
+> every request without a cookie as the local account, so anyone who finds the
+> URL is signed in as you and can read and delete your data.
+
+The Dockerfile binds `${PORT:-8000}`; platforms that inject `$PORT` route only
+to it, so it cannot be hardcoded.
+
+### 3. Frontend — Vercel
+
+1. **New Project → import this repo → set Root Directory to `frontend`.** This
+   is the whole monorepo story on Vercel: it then installs and builds inside
+   `frontend/`, and auto-detects Vite (`npm run build`, output `dist`).
+2. Edit `frontend/vercel.json` and replace `REPLACE-ME.onrender.com` with your
+   Render hostname, then commit.
+3. Optionally set the Ignored Build Step to skip frontend-less commits:
+
+```bash
+git diff --quiet HEAD^ HEAD -- .
+```
+
+### 4. Google sign-in
+
+Add `https://<your-app>.vercel.app` to the OAuth client's **Authorised
+JavaScript origins**, alongside `http://localhost:5173`.
+
+Sign-in will not work on Vercel *preview* deployments — their URLs change per
+commit and Google only accepts origins on the allow-list. Use the production
+domain.
+
+### What free tier actually feels like
+
+- **Two cold starts on the first visit.** The Render free service sleeps after
+  inactivity and Neon suspends idle compute, so the first request wakes both.
+  If Render takes longer to wake than Vercel's proxy will wait, that first
+  request fails — reload and it works.
+- **Never use SQLite in production here.** Free hosts have ephemeral disks, so
+  the `.db` file is discarded on every redeploy. That is why the database is a
+  separate service.
+- **`create_all` creates tables but never alters them.** Fine for a first
+  deploy; the next model change against a live Postgres needs real migrations
+  (see [ARCHITECTURE.md](ARCHITECTURE.md#migrating-an-existing-database)).
+- Local data does not migrate. Production starts empty.
+- Free limits change often — check each provider's current terms.
+
 ## Environment Variables
 
 Backend (`backend/.env`, template in `backend/.env.example`):
