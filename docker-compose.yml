@@ -1,0 +1,60 @@
+# ---------------------------------------------------------------------------
+# Full stack with Postgres. Requires Docker Desktop.
+#
+# Without Docker, see README.md → "Running locally without Docker": the backend
+# runs on a local Python venv against SQLite and the frontend on plain npm.
+# ---------------------------------------------------------------------------
+
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: productivity_tracker_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-tracker}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tracker}
+      POSTGRES_DB: ${POSTGRES_DB:-productivity_tracker}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      # The API's start-up creates tables, so it must not boot before Postgres
+      # is genuinely accepting connections.
+      test:
+        ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tracker} -d ${POSTGRES_DB:-productivity_tracker}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./backend
+    container_name: productivity_tracker_api
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-tracker}:${POSTGRES_PASSWORD:-tracker}@db:5432/${POSTGRES_DB:-productivity_tracker}
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+      SQL_ECHO: "0"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend/app:/app/app:ro
+
+  web:
+    build: ./frontend
+    container_name: productivity_tracker_web
+    environment:
+      # The Vite dev proxy forwards /api to this target inside the network.
+      VITE_API_PROXY_TARGET: http://api:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/index.html:/app/index.html
+      - /app/node_modules
+
+volumes:
+  postgres_data:

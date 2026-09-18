@@ -1,0 +1,728 @@
+# Full-Stack Development Skill
+
+## Purpose
+
+This skill defines the development workflow, technology standards, validation requirements, documentation requirements, and implementation rules for this project.
+
+Claude must follow these rules for all development work unless the user explicitly overrides a specific rule.
+
+---
+
+# 1. Development Workflow
+
+## Step 1 — Analyze Before Implementing
+
+When the user provides a requirement, Claude must **not immediately start coding**.
+
+First:
+
+1. Carefully analyze the requirement.
+2. Identify the expected functionality.
+3. Identify affected frontend, backend, API, database, AI, and infrastructure components.
+4. Identify assumptions and ambiguities.
+5. Identify potential edge cases.
+6. Determine the files/components that will need to be created or modified.
+7. Propose an implementation approach.
+8. Explain important technical decisions and trade-offs.
+
+The analysis should be understandable to the user.
+
+### Required response structure
+
+Before implementation, provide:
+
+```text
+## Requirement Understanding
+Explain what you understood.
+
+## Proposed Approach
+Explain how the requirement will be implemented.
+
+## Architecture / Components Affected
+List the relevant components, services, APIs, and files.
+
+## Validation / Edge Cases
+Explain important validation and failure scenarios.
+
+## Assumptions / Questions
+List anything that is unclear or requires a decision.
+
+## Implementation Plan
+Provide the ordered steps that will be performed.
+```
+
+### Confirmation Gate
+
+After presenting the analysis and implementation plan, **STOP and wait for user confirmation**.
+
+Do not modify files or begin implementation until the user confirms.
+
+Examples of confirmation:
+
+* "Proceed"
+* "Go ahead"
+* "Implement it"
+* "Yes"
+* "Approved"
+
+If the user provides corrections or additional requirements, update the analysis and ask for confirmation again.
+
+---
+
+# 2. Frontend Technology Stack
+
+The frontend must use:
+
+* React.js
+* TypeScript
+* Vite
+* Tailwind CSS
+* Prettier
+* TanStack Query for API communication
+* A modern, actively maintained component library for reusable UI components
+
+Do not introduce a different frontend framework unless explicitly requested.
+
+---
+
+# 3. Frontend TypeScript Rules
+
+TypeScript must be used strictly.
+
+### NEVER use `any`
+
+The frontend must contain **zero intentional `any` types**.
+
+Do not use:
+
+```typescript
+any
+```
+
+or:
+
+```typescript
+as any
+```
+
+or:
+
+```typescript
+<Record<string, any>>
+```
+
+Use proper types, generics, interfaces, discriminated unions, `unknown`, or other appropriate TypeScript constructs.
+
+If an external library returns `unknown`, properly narrow or validate the value instead of converting it to `any`.
+
+### Type API Contracts
+
+API request and response objects must have explicit TypeScript types.
+
+Example:
+
+```typescript
+interface UserResponse {
+  id: string;
+  name: string;
+  email: string;
+}
+```
+
+Avoid untyped API responses.
+
+---
+
+# 4. Component Architecture
+
+Use reusable components instead of duplicating UI code.
+
+Prefer:
+
+```text
+components/
+pages/
+layouts/
+hooks/
+services/
+types/
+utils/
+```
+
+Components should have a single clear responsibility.
+
+Avoid unnecessarily large components.
+
+If a component becomes difficult to understand or contains multiple independent responsibilities, split it into smaller components.
+
+---
+
+# 5. UI Component Library
+
+Use a modern component library for common UI elements instead of repeatedly implementing common components from scratch.
+
+Examples include:
+
+* buttons
+* dialogs
+* modals
+* dropdowns
+* forms
+* inputs
+* tables
+* tabs
+* cards
+* tooltips
+* notifications
+
+Before introducing a new component library, check the existing project dependencies and use the project's established library where appropriate.
+
+Do not add multiple competing component libraries without a clear reason.
+
+---
+
+# 6. Tailwind CSS
+
+Tailwind CSS must be used for styling.
+
+Prefer utility classes and reusable styling patterns.
+
+Avoid large amounts of custom CSS unless Tailwind cannot reasonably provide the required behavior.
+
+Do not introduce another CSS framework unless explicitly requested.
+
+Maintain consistent spacing, typography, responsive behavior, and visual hierarchy.
+
+---
+
+# 7. Prettier
+
+All frontend code must be formatted using Prettier.
+
+Before considering frontend work complete:
+
+1. Run the project's formatting command.
+2. Ensure formatting succeeds.
+3. Ensure the resulting code is consistent with the existing project configuration.
+
+Do not manually fight the project's Prettier configuration.
+
+---
+
+# 8. API Calls
+
+Use **TanStack Query** for API communication and server-state management.
+
+Do not create ad-hoc API fetching patterns throughout React components.
+
+Prefer a structure such as:
+
+```text
+services/
+  api/
+    client.ts
+    users.ts
+
+hooks/
+  useUsers.ts
+  useUser.ts
+```
+
+TanStack Query should handle:
+
+* fetching
+* caching
+* loading states
+* error states
+* mutations
+* invalidation
+* refetching
+
+Keep API communication separate from presentation components.
+
+---
+
+# 9. Backend
+
+Backend requirements are documented separately in the project requirements/documentation.
+
+Claude must treat the documented backend requirements as the source of truth.
+
+Before implementing backend functionality:
+
+1. Read the relevant requirements.
+2. Understand the expected API behavior.
+3. Identify request and response contracts.
+4. Identify validation requirements.
+5. Identify error cases.
+6. Confirm the implementation approach with the user when required by the workflow.
+
+Do not invent backend behavior that conflicts with the documented requirements.
+
+---
+
+# 10. API Input and Output Validation
+
+Every API endpoint must have clear validation.
+
+## Input Validation
+
+Validate:
+
+* required fields
+* data types
+* string lengths
+* numeric ranges
+* enum values
+* formats
+* nested objects
+* arrays
+* authentication/authorization requirements where applicable
+
+Invalid input must result in a clear and appropriate API error response.
+
+Do not assume that frontend validation is sufficient.
+
+Backend APIs must independently validate incoming data.
+
+## Output Validation
+
+API responses must also follow clearly defined response contracts.
+
+Ensure that:
+
+* expected fields are present
+* field types are correct
+* sensitive/internal fields are not accidentally exposed
+* error responses have a consistent structure
+
+Prefer schema-based validation where supported by the backend technology.
+
+---
+
+# 11. AI Integration
+
+AI functionality must use **Hugging Face** integration with an **Access Token**.
+
+The Hugging Face token must never be hardcoded in source code.
+
+Never commit secrets such as:
+
+```text
+HF_TOKEN=...
+```
+
+into the repository.
+
+Use environment variables/secrets.
+
+Example:
+
+```env
+HF_ACCESS_TOKEN=
+```
+
+The exact environment-variable name should follow the project's existing configuration conventions.
+
+AI requests should normally be routed through the backend rather than exposing the Hugging Face access token to the browser.
+
+The frontend must never receive or expose the Hugging Face access token.
+
+---
+
+# 12. Docker-First Development
+
+The local environment does not have Java or Python installed.
+
+Therefore:
+
+> **Java and Python workloads must run inside Docker.**
+
+Do not require the user to install Java or Python locally.
+
+If the project requires:
+
+* Python
+* Java
+* Python dependencies
+* Java dependencies
+* backend runtimes
+* AI services
+* supporting services
+
+they must be provided through Docker/Docker Compose as appropriate.
+
+The development environment should be reproducible.
+
+Prefer:
+
+```text
+docker compose up
+```
+
+or equivalent documented commands for starting required services.
+
+---
+
+# 13. Docker Requirements
+
+Provide appropriate Docker configuration for required services.
+
+Depending on the project, this may include:
+
+```text
+Dockerfile
+docker-compose.yml
+.dockerignore
+```
+
+Keep services isolated and clearly named.
+
+Environment-specific configuration should be handled through environment variables rather than hardcoded values.
+
+Do not commit secrets.
+
+---
+
+# 14. Project Documentation
+
+A clear `README.md` is mandatory.
+
+The README must explain what the project does and how to run it.
+
+At minimum, include:
+
+## Project Overview
+
+Explain:
+
+* what the application does
+* the problem it solves
+* major capabilities
+
+## Architecture Overview
+
+Briefly explain the major system components.
+
+## Technology Stack
+
+Document the major technologies used.
+
+## Prerequisites
+
+Clearly state what the user needs locally.
+
+Do not incorrectly require Java or Python if those runtimes are provided through Docker.
+
+## Setup
+
+Explain how to configure environment variables.
+
+## Running the Project
+
+Provide exact commands.
+
+Example:
+
+```bash
+docker compose up --build
+```
+
+## Development
+
+Explain how developers should work on the project.
+
+## API
+
+Document important API endpoints or link to the API documentation.
+
+## Testing
+
+Explain how tests are executed.
+
+## Build
+
+Explain how production builds are generated.
+
+## Environment Variables
+
+Document required variables without exposing actual secrets.
+
+---
+
+# 15. Architecture Documentation
+
+A clear architecture document is mandatory.
+
+Create:
+
+```text
+ARCHITECTURE.md
+```
+
+unless the project already has an equivalent architecture document.
+
+It should explain:
+
+* system overview
+* frontend architecture
+* backend architecture
+* API communication
+* data flow
+* AI integration
+* authentication/authorization where applicable
+* external services
+* Docker/service architecture
+* important architectural decisions
+
+Include diagrams where useful.
+
+A Mermaid diagram is preferred when appropriate.
+
+Example:
+
+```mermaid
+flowchart LR
+    Browser --> Frontend
+    Frontend --> Backend
+    Backend --> Database
+    Backend --> HuggingFace
+```
+
+The architecture documentation must be updated whenever a significant architectural change is made.
+
+---
+
+# 16. Error Handling
+
+Errors must be handled explicitly.
+
+Frontend:
+
+* show appropriate loading states
+* show appropriate error states
+* handle failed API calls
+* avoid silently swallowing errors
+
+Backend:
+
+* return appropriate HTTP status codes
+* return consistent error responses
+* log useful diagnostic information
+* never expose sensitive implementation details
+
+Do not use generic catch blocks that silently ignore failures.
+
+Avoid:
+
+```typescript
+try {
+  ...
+} catch {
+}
+```
+
+unless there is a documented reason for intentionally ignoring the error.
+
+---
+
+# 17. Security
+
+Never commit:
+
+* API keys
+* access tokens
+* passwords
+* private keys
+* credentials
+* production secrets
+
+Use environment variables or a proper secret-management mechanism.
+
+Hugging Face credentials must remain server-side.
+
+Validate and sanitize untrusted input.
+
+Do not trust frontend validation.
+
+Follow least-privilege principles when configuring services.
+
+---
+
+# 18. Testing
+
+For meaningful functionality, add appropriate tests.
+
+At minimum, consider:
+
+* API validation tests
+* business-logic tests
+* frontend component tests where appropriate
+* integration tests for important flows
+
+Tests must cover important success and failure paths.
+
+Do not claim that tests pass unless they were actually executed.
+
+---
+
+# 19. Code Quality
+
+Prefer:
+
+* small focused functions
+* clear naming
+* explicit types
+* reusable components
+* separation of concerns
+* predictable error handling
+* minimal duplication
+* maintainable architecture
+
+Avoid:
+
+* unnecessary abstractions
+* premature optimization
+* duplicated business logic
+* giant components
+* giant functions
+* magic constants
+* dead code
+* commented-out obsolete code
+
+Do not introduce complexity without a clear benefit.
+
+---
+
+# 20. Dependency Management
+
+Before adding a dependency:
+
+1. Check whether the functionality already exists in the project.
+2. Check whether an existing dependency can solve the problem.
+3. Prefer actively maintained libraries.
+4. Avoid adding redundant libraries.
+5. Explain significant new dependencies during the analysis phase.
+
+Do not add dependencies silently when they materially affect the architecture.
+
+---
+
+# 21. Existing Code
+
+When working in an existing project:
+
+1. Inspect the existing structure first.
+2. Understand existing conventions.
+3. Reuse existing utilities and components where appropriate.
+4. Avoid unnecessary rewrites.
+5. Preserve working functionality.
+6. Make the smallest clean change that satisfies the requirement.
+
+Do not replace existing architecture merely because another approach is personally preferred.
+
+---
+
+# 22. Requirement Changes
+
+If implementation reveals that the original requirement is ambiguous, contradictory, or technically problematic:
+
+STOP.
+
+Explain:
+
+1. What was discovered.
+2. Why it matters.
+3. The available options.
+4. Your recommended option.
+
+Then wait for confirmation before making a significant change in direction.
+
+---
+
+# 23. Completion Checklist
+
+Before declaring a task complete, verify:
+
+### Requirements
+
+* [ ] Requirement implemented as requested.
+* [ ] No unresolved assumptions remain.
+* [ ] Edge cases considered.
+
+### Frontend
+
+* [ ] React + TypeScript + Vite used.
+* [ ] Tailwind CSS used.
+* [ ] Modern component library used where appropriate.
+* [ ] TanStack Query used for API calls.
+* [ ] No `any` types.
+* [ ] API contracts are typed.
+* [ ] Prettier formatting passes.
+
+### Backend
+
+* [ ] Documented backend requirements followed.
+* [ ] API input validation implemented.
+* [ ] API output contracts are clear.
+* [ ] Error responses are consistent.
+* [ ] Important failure cases handled.
+
+### AI
+
+* [ ] Hugging Face integration uses access-token authentication.
+* [ ] Token is stored securely.
+* [ ] Token is never exposed to frontend code.
+* [ ] Token is not committed to source control.
+
+### Docker
+
+* [ ] Java/Python requirements run through Docker.
+* [ ] Required services can be started reproducibly.
+* [ ] Environment configuration is documented.
+
+### Documentation
+
+* [ ] `README.md` clearly explains the project.
+* [ ] Setup instructions are present.
+* [ ] Run instructions are present.
+* [ ] Environment variables are documented.
+* [ ] `ARCHITECTURE.md` exists and is current.
+
+### Quality
+
+* [ ] Tests added/updated where appropriate.
+* [ ] Tests actually executed.
+* [ ] Build actually verified.
+* [ ] No secrets committed.
+* [ ] No unnecessary dependencies added.
+* [ ] No unnecessary architectural changes introduced.
+
+---
+
+# 24. Final Implementation Response
+
+After implementation, report:
+
+```text
+## Implemented
+What was changed.
+
+## Files Changed
+List important files created/modified.
+
+## Validation
+What was tested, formatted, built, or otherwise verified.
+
+## Docker
+How to start the project/services.
+
+## Documentation
+What documentation was added or updated.
+
+## Notes
+Any remaining limitations, assumptions, or follow-up work.
+```
+
+Never claim something was tested, built, or verified unless it was actually performed.
+

@@ -1,0 +1,305 @@
+@import "tailwindcss";
+
+/* Self-hosted, so the app has no runtime font dependency. */
+@import "@fontsource-variable/hanken-grotesk";
+@import "@fontsource/petrona/400.css";
+@import "@fontsource/petrona/600.css";
+@import "@fontsource/petrona/400-italic.css";
+
+/* ===========================================================================
+   Design system — Warm Workspace
+
+   The feeling to leave: a well-made paper planner. Calm, tactile, inviting.
+   Everything should look like it could be picked up.
+
+   Committed moves:
+     1. Type      Petrona (soft serif) for display, Hanken Grotesk for body and
+                  for numerals. Numerals use tabular figures so a column of
+                  times still aligns digit-for-digit down 31 day rows.
+     2. Colour    Sand ground, warm ink, clay as the single interactive accent.
+                  Category colours are a muted family that sits *with* the sand
+                  rather than shouting over it. Clay is reserved for UI and
+                  never used for a category, so an accent never reads as data.
+     3. Surfaces  Rounded 12-22px cards lifted on two-layer soft shadows. Depth
+                  carries hierarchy; borders are a quiet secondary.
+     4. Motion    Slow and eased. Things settle rather than snap.
+     5. Texture   A barely-there paper grain over the whole page, so large flat
+                  areas of sand read as a material instead of a colour fill.
+=========================================================================== */
+
+:root {
+  color-scheme: light dark;
+
+  /* Ground and surfaces */
+  --sand: #f6efe4;
+  --card: #fffdf9;
+  --card-sunken: #efe6d8;
+  --rule: #e6dccb;
+  --rule-strong: #d3c6b0;
+
+  /* Ink */
+  --ink: #2f2a24;
+  --ink-secondary: #6b6055;
+  --ink-muted: #9b8e80;
+
+  /* The single interactive accent */
+  --clay: #c96f4a;
+  --clay-pressed: #b25b37;
+  --clay-wash: #f9e8de;
+
+  /* Functional status only */
+  --now: #cf3f30;
+  --danger: #b03a2b;
+  --danger-wash: #fbe7e3;
+
+  /* Timeline grid */
+  --grid-minor: #eae0cf;
+  --grid-quarter: #ded1bb;
+  --grid-hour: #cbbca3;
+  --grid-band: #f2ebde;
+  --weekend: #f1e8da;
+
+  /* Two-layer soft shadows: a tight contact shadow plus a wide ambient one. */
+  --lift-1: 0 1px 2px rgba(74, 56, 36, 0.05), 0 2px 6px -2px rgba(74, 56, 36, 0.08);
+  --lift-2: 0 1px 3px rgba(74, 56, 36, 0.06), 0 8px 20px -8px rgba(74, 56, 36, 0.18);
+  --lift-3: 0 2px 4px rgba(74, 56, 36, 0.06), 0 20px 44px -20px rgba(74, 56, 36, 0.3);
+  --lift-clay: 0 8px 20px -10px rgba(201, 111, 74, 0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* A warm dark, not a cool one: the same room with the lights down. */
+    --sand: #1e1a16;
+    --card: #282320;
+    --card-sunken: #171412;
+    --rule: #37302a;
+    --rule-strong: #4c433a;
+
+    --ink: #f2ebe0;
+    --ink-secondary: #b6a898;
+    --ink-muted: #8a7c6c;
+
+    --clay: #e08a63;
+    --clay-pressed: #f0a07c;
+    --clay-wash: #3a251b;
+
+    --now: #ff6a55;
+    --danger: #f0776a;
+    --danger-wash: #381914;
+
+    --grid-minor: #2c2622;
+    --grid-quarter: #383029;
+    --grid-hour: #514639;
+    --grid-band: #221e1a;
+    --weekend: #231f1b;
+
+    --lift-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 6px -2px rgba(0, 0, 0, 0.4);
+    --lift-2: 0 1px 3px rgba(0, 0, 0, 0.35), 0 8px 20px -8px rgba(0, 0, 0, 0.6);
+    --lift-3: 0 2px 4px rgba(0, 0, 0, 0.4), 0 20px 44px -20px rgba(0, 0, 0, 0.8);
+    --lift-clay: 0 8px 20px -10px rgba(224, 138, 99, 0.45);
+  }
+}
+
+@theme inline {
+  --color-sand: var(--sand);
+  --color-card: var(--card);
+  --color-card-sunken: var(--card-sunken);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-ink: var(--ink);
+  --color-ink-secondary: var(--ink-secondary);
+  --color-ink-muted: var(--ink-muted);
+  --color-clay: var(--clay);
+  --color-clay-pressed: var(--clay-pressed);
+  --color-clay-wash: var(--clay-wash);
+  --color-now: var(--now);
+  --color-danger: var(--danger);
+  --color-danger-wash: var(--danger-wash);
+  --color-grid-minor: var(--grid-minor);
+  --color-grid-quarter: var(--grid-quarter);
+  --color-grid-hour: var(--grid-hour);
+  --color-grid-band: var(--grid-band);
+  --color-weekend: var(--weekend);
+
+  --font-sans: "Hanken Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Petrona", Georgia, serif;
+
+  --shadow-lift-1: var(--lift-1);
+  --shadow-lift-2: var(--lift-2);
+  --shadow-lift-3: var(--lift-3);
+
+  /* Slow and eased: things settle rather than snap. */
+  --ease-settle: cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--sand);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Paper grain. Fixed so it does not swim while the page scrolls, and faint
+   enough to register as texture rather than noise. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+@media (prefers-color-scheme: dark) {
+  body::before {
+    mix-blend-mode: screen;
+    opacity: 0.16;
+  }
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+/* Display type: the soft serif. */
+.display {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.display-italic {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* Every numeral: times, durations, day numbers, totals. Tabular figures keep
+   a column of times aligned even though this is not a monospaced face. */
+.readout {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: 0.01em;
+}
+
+/* Quiet section and field labels. */
+.label-soft {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* ---------------------------------------------------------------------------
+   Scrollbars, shaped to match the rounded surfaces.
+--------------------------------------------------------------------------- */
+.timeline-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule-strong) transparent;
+}
+
+.timeline-scroll::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.timeline-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.timeline-scroll::-webkit-scrollbar-thumb {
+  background: var(--rule-strong);
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
+}
+
+.timeline-scroll::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Hidden scrollbars on the mobile day pager, where swiping is the affordance. */
+.scroll-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scroll-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Motion. Slow, eased, sparing: a settling entrance for surfaces and a
+   growing entrance for bars.
+--------------------------------------------------------------------------- */
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-settle {
+  animation: settle 620ms var(--ease-settle) both;
+}
+
+@keyframes grow-x {
+  from {
+    opacity: 0;
+    transform: scaleX(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+.animate-grow-x {
+  transform-origin: left center;
+  animation: grow-x 520ms var(--ease-settle) both;
+}
+
+@keyframes grow-y {
+  from {
+    opacity: 0;
+    transform: scaleY(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+.animate-grow-y {
+  transform-origin: top center;
+  animation: grow-y 520ms var(--ease-settle) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-settle,
+  .animate-grow-x,
+  .animate-grow-y {
+    animation: none;
+    transform: none;
+    opacity: 1;
+  }
+}
