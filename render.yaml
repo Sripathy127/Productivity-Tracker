@@ -14,7 +14,9 @@ services:
     rootDir: backend
     dockerfilePath: ./Dockerfile
     plan: free
-    region: oregon
+    # Matches the Neon project's region (ap-southeast-1) — every request
+    # makes several queries, so a cross-Pacific hop would cost on each one.
+    region: singapore
     healthCheckPath: /health
     autoDeployTrigger: commit
 
